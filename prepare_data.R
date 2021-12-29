@@ -19,7 +19,7 @@ puma_tract_join <- puma_tract_equiv %>%
 
 tracts <- puma_tract_join$tract
 
-tract_block_join <- read.csv(tract_block_equiv_file) %>%
+tract_block_join <- readRDS(file=tract_block_equiv_file) %>%
   mutate(tract = paste0(str_pad(as.character(TAB_STATE_2010), 2, pad="0"),
                         str_pad(as.character(TAB_COUNTY_2010), 3, pad="0"),
                         str_pad(as.character(TRACT_2010), 6, pad="0"))) %>%

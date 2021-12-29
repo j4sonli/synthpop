@@ -86,7 +86,7 @@ my_census_api_key <- "ac6cb3e106c860e52384fe71cf0407a13c25b96c"
 
 puma_tract_equiv_file <- "synthpop_data/2010_Census_Tract_to_2010_PUMA.csv"
 
-tract_block_equiv_file <- "synthpop_data/tract_block_equiv_2010.csv"
+tract_block_equiv_file <- "synthpop_data/tract_block_equiv_2010.Rds"
 
 
 ##### DEFINE SYSTEM COMMANDS #####
