@@ -18,7 +18,13 @@ In order to use `tidycensus` to download PUMS and ACS data, you will need to US 
 
 1. Download Julia from https://julialang.org/downloads/. The scripts have been tested with version 1.6.1. 
 2. Download Gurobi with an academic license following the instructions on https://www.gurobi.com/academia/academic-program-and-licenses/ under "Individual Academic Licenses". You will need a free Gurobi account. The scripts have been tested with Gurobi version 9.1.0. 
-3. Note the paths to both your Gurobi installation directory and your activated license file (.lic). 
+3. Open the Julia console and install the dependencies by running the following:
+
+`import Pkg`
+
+`Pkg.add.(["Gurobi", "JuMP", "CSV", "DataFrames", "Random", "RLEVectors", "DelimitedFiles", "StatsBase"])`
+
+5. Note the paths to both your Gurobi installation directory and your activated license file (.lic). 
 
 SETTINGS
 ------------
