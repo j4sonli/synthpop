@@ -15,6 +15,7 @@ We recommend 16-32 Gb of memory for most PUMAs; some PUMAs with a large number o
 3. Download this repository and save as an R project (in RStudio, File > New Project > Existing Directory). 
 4. Once inside the desired R environment for the project (renv if you use it), install the package dependencies by running 
    `install.packages(c("dplyr","tidyr","stringr","R.utils","tidycensus","bnlearn","foreach","doSNOW","ggplot2"))` in the R console. 
+5. Optionally, to run plot_maps.R, you will need to install "gridExtra", "tmap", and "sf" as well. 
 
 In order to use `tidycensus` to download PUMS and ACS data, you will need to US Census API key. To obtain one, visit https://api.census.gov/data/key_signup.html. 
 
