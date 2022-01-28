@@ -15,7 +15,6 @@ pums_raw <- get_pums(
 ) %>% 
   mutate(puma = paste0(paste0(str_pad(ST, 2, pad="0"), 
                               str_pad(PUMA, 5, pad="0")))) %>%
-  # filter(TEN != "b") %>%  ## filter out GQs
   select(-c(ST, PUMA, SERIALNO, SPORDER)) %>%
   data.frame()
 
@@ -118,16 +117,16 @@ pums_hh_indv <- pums %>%
          indus = ifelse(indus == "< 16 yrs. old / NILF", "< 16 yrs. old / NILF", substr(indus, 1, 1)) %>%
            factor(),
          edu_q = recode(edu_q, 
-                        "2"="1", ## no schooling or nursery/preschool
-                        "4"="3", "5"="3", "6"="3", "7"="3", ## incomplete grade school
-                        "9"="8", "10"="8", ## completed grade school
+                        "02"="01", ## no schooling or nursery/preschool
+                        "04"="03", "05"="03", "06"="03", "07"="03", ## incomplete grade school
+                        "09"="08", "10"="08", ## completed grade school
                         "12"="11", "13"="11", "14"="11", "15"="11", ## completed middle school
                         "17"="16", ## high school graduate or GED
                         "19"="18", ## some college, no degree
                         ) %>% 
-           recode("1"="No schooling or nursery/preschool",
-                  "3"="Some grade school",
-                  "8"="Grade school",
+           recode("01"="No schooling or nursery/preschool",
+                  "03"="Some grade school",
+                  "08"="Grade school",
                   "11"="Middle school",
                   "16"="High school or GED",
                   "18"="Some college",

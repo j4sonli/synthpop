@@ -4,6 +4,10 @@ Synthetic population generation in the United States at scale.
 SETUP
 ------------
 
+### Machine requirements
+
+We recommend 16-32 Gb of memory for most PUMAs; some PUMAs with a large number of tracts or block groups may require 64 Gb or more. 
+
 ### Set up R
 
 1. Download R. Please follow the instructions on https://cran.r-project.org/. The scripts have been tested with version 4.1.0. 
@@ -64,3 +68,5 @@ Occasionally, an error might be encountered early on in process_pums.R that read
 `Error: Your API call has errors. The API message returned is There was an error while running your query. We've logged the error and we'll correct it ASAP. Sorry for the inconvenience..`
 
 The cause of the error is unknown, but it can usually be resolved by simply running the command again. 
+
+Additionally, note that Gurobi may throw a misleading error that reads "LoadError: result index of attribute mathoptinterace.objectivevalue(1) out of bounds. There are currently 0 solution(s) in the model." if the available memory is insufficient. 

@@ -153,22 +153,21 @@ if(!use_prev_marg) {
     mutate("GQ.GQ" = tract_gq_pop$gq_pop)
   write.csv(tract_nwork_ncars, file=paste0(marg_dir, "tract_nwork_ncars.csv"), row.names=F)
 
-  ##### blkgp x i_eth x race_ #####
-  blkgp_i_eth_race_ <- fetch_from_acs("B03002", "block group", blkgps) %>%
-    mutate("No Hispanic origin.White" = B03002_003E,
-           "No Hispanic origin.Black" = B03002_004E,
-           "No Hispanic origin.American Indian, Alaskan, or Pacific Islander" = B03002_005E + B03002_007E,
-           "No Hispanic origin.Asian" = B03002_006E,
-           "No Hispanic origin.Other" = B03002_008E,
-           "No Hispanic origin.Two or more races" = B03002_009E,
-           "Hispanic origin.White" = B03002_013E,
-           "Hispanic origin.Black" = B03002_014E,
-           "Hispanic origin.American Indian, Alaskan, or Pacific Islander" = B03002_015E + B03002_017E,
-           "Hispanic origin.Asian" = B03002_016E,
-           "Hispanic origin.Other" = B03002_018E,
-           "Hispanic origin.Two or more races" = B03002_019E) %>%
-    select(-c(2:44))
-  write.csv(blkgp_i_eth_race_, file=paste0(marg_dir, "blkgp_i_eth_race_.csv"), row.names=F)
+  ##### tract x i_inc #####
+  tract_i_inc <- fetch_from_acs("B06010", "tract", tracts) %>%
+    mutate("<=25K" = B06010_004E + B06010_005E + B06010_006E,
+           "26-50K" = B06010_007E + B06010_008E,
+           "51-75K" = B06010_009E + B06010_010E,
+           ">75K" = B06010_011E) %>%
+    select(-c(2:112))
+  # need to add category for individuals less than 15 years old
+  tract_i_inc <- tract_i_sex_i_age.raw %>%
+    mutate("age<15" = B01001_003E + B01001_004E + B01001_005E + B01001_027E + B01001_028E + B01001_029E) %>%
+    mutate("age<15" = `age<15` * (sum(select(tract_i_sex_i_age, -geoid)) - (sum(select(tract_i_inc, -geoid)))) / sum(`age<15`)) %>%
+    select(-c(2:100)) %>%
+    left_join(tract_i_inc, by="geoid") %>%
+    mutate("age<15" = trs(`age<15`))
+  write.csv(tract_i_inc, file=paste0(marg_dir, "tract_i_inc.csv"), row.names=F)
   
 } else {
   tract_gq_pop <- read.csv(paste0(marg_dir, "tract_gq_pop.csv"), check.names=F)
@@ -178,9 +177,9 @@ if(!use_prev_marg) {
   tract_hhtype <- read.csv(paste0(marg_dir, "tract_hhtype.csv"), check.names=F)
   puma_hhtype <- read.csv(paste0(marg_dir, "puma_hhtype.csv"), check.names=F)
   tract_nwork <- read.csv(paste0(marg_dir, "tract_nwork.csv"), check.names=F)
+  tract_i_sex_i_age <- read.csv(paste0(marg_dir, "tract_i_sex_i_age.csv"), check.names=F)
+  blkgp_emply <- read.csv(paste0(marg_dir, "blkgp_emply.csv"), check.names=F)
   
   tract_nwork_ncars <- read.csv(paste0(marg_dir, "tract_nwork_ncars.csv"), check.names=F)
-  tract_i_sex_i_age <- read.csv(paste0(marg_dir, "tract_i_sex_i_age.csv"), check.names=F)
-  blkgp_i_eth_race_ <- read.csv(paste0(marg_dir, "blkgp_i_eth_race_.csv"), check.names=F)
-  blkgp_emply <- read.csv(paste0(marg_dir, "blkgp_emply.csv"), check.names=F)
+  tract_i_inc <- read.csv(paste0(marg_dir, "tract_i_inc.csv"), check.names=F)
 }

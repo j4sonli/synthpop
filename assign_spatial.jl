@@ -57,6 +57,8 @@ const blkgp_hh_pops = sum(marginals[indv_index-1], dims=1)[1]
 const tract_indv_pops = sum(marginals[indv_index], dims=1)[1]
 const blkgp_indv_pops = sum(marginals[length(marginals)], dims=1)[1]
 
+print(blkgp_hh_pops)
+
 ## Process population
 syn_hhs = CSV.read(SYN_HHS_FILE, DataFrame)
 puma_df = filter(row -> lpad(string(row.puma), 7, "0") == CURR_PUMA, syn_hhs)
@@ -104,7 +106,6 @@ n_cells = sum(sum(length(lvl) for lvl in marg) for marg in marginals)
 @constraint(model, con_ub[i=1:n*m], x[i] <= 1) # upper bound constraint
 @constraint(model, con_rowsum[i=1:n], sum(x[m*(i-1)+j] for j in 1:m) == 1)
 @constraint(model, con_colsum[j=1:m], sum(x[m*(i-1)+j] for i in 1:n) == blkgp_hh_pops[j])
-# @constraint(model, con_colindvsum[j=1:m], sum(syn_hhs_hhsizs[i] * x[m*(i-1)+j] for i in 1:n) == blkgp_indv_pops[j])
 
 # add marginal cell constraints to enforce absolute value
 marg_cell_i = 1

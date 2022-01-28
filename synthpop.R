@@ -78,12 +78,12 @@ sample_indvs_file <- "sample_indvs.R"
 select_synpop_file <- "select_synpop.jl"
 assign_spatial_file <- "assign_spatial.jl"
 
-hh_pool_file <- paste0("synthpop_output2/hh_pool_", pumas, output_suffix, ".csv")
-indv_pool_file <- paste0("synthpop_output3/indv_pool_", pumas, output_suffix, ".csv")
-syn_hhs_file <- paste0("synthpop_output/syn_hhs_", pumas, output_suffix, ".csv")
-syn_indvs_file <- paste0("synthpop_output/syn_indvs_", pumas, output_suffix, ".csv")
-syn_hhs_spatial_file <- paste0("synthpop_output/syn_hhs_spatial_", pumas, output_suffix, ".csv")
-syn_indvs_spatial_file <- paste0("synthpop_output/syn_indvs_spatial_", pumas, output_suffix, ".csv")
+hh_pool_file <- paste0("synthpop_output/", pumas, "/hh_pool_", pumas, output_suffix, ".csv")
+indv_pool_file <- paste0("synthpop_output/", pumas, "/indv_pool_", pumas, output_suffix, ".csv")
+syn_hhs_file <- paste0("synthpop_output/", pumas, "/syn_hhs_", pumas, output_suffix, ".csv")
+syn_indvs_file <- paste0("synthpop_output/", pumas, "/syn_indvs_", pumas, output_suffix, ".csv")
+syn_hhs_spatial_file <- paste0("synthpop_output/", pumas, "/syn_hhs_spatial_", pumas, output_suffix, ".csv")
+syn_indvs_spatial_file <- paste0("synthpop_output/", pumas, "/syn_indvs_spatial_", pumas, output_suffix, ".csv")
 
 gurobi_logfile <- "synthpop_gurobi_log.txt"
 

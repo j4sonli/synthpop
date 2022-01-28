@@ -94,10 +94,13 @@ sampled_hhs <-
         ##  nwork > 0 but impossible to sample a worker;
         ##  nchil > 0 but impossible to sample a child;
         ##  none of the above > 0 but impossible to sample a non-employed adult
+        p_sample_worker <- cpquery(hh_indv_bns.puma.fit[[hhstruc_i]], method="lw", (emply=="Armed forces employed" | emply=="Civilian employed"), evid)
+        p_sample_child <- cpquery(hh_indv_bns.puma.fit[[hhstruc_i]], method="lw", (i_age=="<18"), evid)
+        p_sample_nonemployed_nonchild <- cpquery(hh_indv_bns.puma.fit[[hhstruc_i]], method="lw", ((emply == "Not in labor force" | emply == "Unemployed") & i_age != "<18"), evid)
         if((true_nchil + true_nwork > true_hhsiz) ||
-           (true_nwork > 0 && cpquery(hh_indv_bns.puma.fit[[hhstruc_i]], method="lw", (emply=="Armed forces employed" | emply=="Civilian employed"), evid) == 0) ||
-           (true_nchil > 0 && cpquery(hh_indv_bns.puma.fit[[hhstruc_i]], method="lw", (i_age=="<18"), evid) == 0) ||
-           (true_nonemployed_nonchild > 0 && cpquery(hh_indv_bns.puma.fit[[hhstruc_i]], method="lw", ((emply == "Not in labor force" | emply == "Unemployed") & i_age != "<18"), evid) == 0)){
+           (true_nwork > 0 && (is.na(p_sample_worker) || p_sample_worker == 0)) ||
+           (true_nchil > 0 && (is.na(p_sample_child) || p_sample_child == 0)) ||
+           (true_nonemployed_nonchild > 0 && (is.na(p_sample_nonemployed_nonchild) || p_sample_nonemployed_nonchild == 0))){
           to_keep[row] <- F
         }
       }
