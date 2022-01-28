@@ -107,8 +107,8 @@ end
 ## Optimize
 status=optimize!(model)
 
-println("******************************************************")
-println("optimal objective value is = ", objective_value(model))
+println("****************************************************")
+println("final objective value = ", objective_value(model))
 
 ## extract selected households, and reset IDs
 sol_matrix = transpose(reshape(value.(x), (2,n)))

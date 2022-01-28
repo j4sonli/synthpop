@@ -57,8 +57,6 @@ const blkgp_hh_pops = sum(marginals[indv_index-1], dims=1)[1]
 const tract_indv_pops = sum(marginals[indv_index], dims=1)[1]
 const blkgp_indv_pops = sum(marginals[length(marginals)], dims=1)[1]
 
-print(blkgp_hh_pops)
-
 ## Process population
 syn_hhs = CSV.read(SYN_HHS_FILE, DataFrame)
 puma_df = filter(row -> lpad(string(row.puma), 7, "0") == CURR_PUMA, syn_hhs)
@@ -131,8 +129,8 @@ end
 ## Optimize
 status=optimize!(model)
 
-println("******************************************************")
-println("optimal objective value is = ", objective_value(model))
+println("****************************************************")
+println("final objective value =", objective_value(model))
 
 ## assign households to optimized tracts
 sol_matrix = transpose(reshape(value.(x), (m,n)))
