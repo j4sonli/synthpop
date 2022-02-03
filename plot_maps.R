@@ -8,6 +8,7 @@ library(gridExtra)
 library(tidycensus)
 library(tmap)
 library(sf)
+library(viridis)
 
 options(dplyr.summarise.inform=F)
 
@@ -41,7 +42,7 @@ plot_study_areas <- function(map_pumas) {
   study_area_pumas <- rbind(study_area_pumas, puma_sfs %>% 
                               filter(GEOID10 %in% as.character(mapc_pumas)) %>%
                               select(STATEFP10, PUMACE10, GEOID10, geometry) %>%
-                              mutate(NAME10 = "MAPC, MA"))
+                              mutate(NAME10 = "Metro Boston, MA *"))
   # add back the PUMAs in WY
   wy_pumas <- c(5600100, 5600200, 5600300, 5600400, 5600500)
   study_area_pumas <- rbind(study_area_pumas, puma_sfs %>% 
@@ -53,7 +54,7 @@ plot_study_areas <- function(map_pumas) {
   study_area_pumas$density <- NA
   density_vals <- c("Lowest", "Median", "Highest")
   density_counter <- 1
-  for(map_puma in map_pumas[1:15]) {
+  for(map_puma in map_pumas[1:18]) {
     if(density_counter > 3) {
       density_counter <- 1
     }
@@ -65,21 +66,22 @@ plot_study_areas <- function(map_pumas) {
     mutate(NAME10 = factor(NAME10, levels=c("Los Angeles-Long Beach-Santa Ana, CA",
                                             "Houston-Sugar Land-Baytown, TX",
                                             "Phoenix-Mesa-Glendale, AZ",
-                                            "MAPC, MA",
+                                            "Metro Boston, MA *",
                                             "Jacksonville, FL",
                                             "State of WY")))
   
-  dev.new(width=8, height=8, noRStudioGD = T)
+  dev.new(width=7.2, height=9, noRStudioGD = T)
   
   tm_shape(study_area_pumas) + 
     tm_polygons(col="density",
                 palette = "RdYlBu",
                 title="PUMA Density",
                 showNA=F,
-                colorNA="#e6e6e6",
-                legend.is.portrait=F) +
+                colorNA="#f0f0f0",
+                legend.is.portrait=F,
+                border.alpha=0.5) +
     tm_compass(position=c("right", "top")) +
-    tm_scale_bar(breaks=c(0, 100, 200, 300),
+    tm_scale_bar(breaks=c(0, 100, 200),
                  text.size=0.8) +
     tm_facets(by="NAME10",
               ncol=2) +
@@ -335,7 +337,7 @@ plot_error_map <- function(main_title, map_pumas, densities, variable, spatial_l
   tm_shape(sf_geos.puma.sf) + 
     tm_polygons(col="rmse",
                 style="cont",
-                title=paste0("RMSE % (Census",spatial_name,")"),
+                title=paste0("RMSE % (Census ",spatial_name,")"),
                 textNA=NA_label,
                 colorNA="#e6e6e6",
                 legend.is.portrait=F) +
@@ -362,6 +364,111 @@ plot_error_map <- function(main_title, map_pumas, densities, variable, spatial_l
               inner.margins=c(0.06, 0.06, 0.06, 0.06)) 
 }
 
+plot_tract_hhtype_diffs_map <- function(main_title, map_pumas, densities) {
+  puma_labels <- c(paste0("PUMA ", substr(map_pumas[1:15], 3, 7), " (", round(densities[1:15]), " people/sq.mi.)"),
+                   paste0("State of WY (", round(densities[16]), " people/sq.mi.)"))
+  
+  sf_geos.puma <- data.frame()
+  for(pumas in map_pumas){
+    print(pumas)
+    marg_dir <<- paste0("synthpop_data/acs_marginals/", pumas, "/")
+    process_marginals(marg_dir)
+    
+    # using the column names synpop_ct and marg_ct just nominally, so that
+    # we can reuse the rmse functions
+    distr_by_tract <- tract_hhtype %>% 
+      select(-geoid) %>% 
+      as.matrix() %>% 
+      prop.table(margin=1) %>%  
+      `*`(100) %>%
+      data.frame() %>% 
+      cbind(tract_hhtype$geoid, .) %>% 
+      rename(geoid=`tract_hhtype$geoid`) %>%
+      mutate(geoid = str_pad(as.character(geoid), 11, "left", "0")) %>%
+      pivot_longer(cols=c("MC", "NS", "SM", "NF", "GQ"), names_to="hhtype", values_to="synpop_ct") %>%
+      data.frame() %>%
+      select(hhtype, geoid, everything()) %>%
+      mutate(synpop_ct = replace_na(synpop_ct, 0),
+             marg_ct = rep(tract_hhtype %>% 
+                             select(-geoid) %>% 
+                             colSums() %>% 
+                             prop.table() %>%
+                             `*`(100), length(unique(tract_hhtype$geoid))))
+    
+    sf_geos <- readRDS(file=paste0("map_data/geos/",pumas,"_tract_geos.Rds"))
+    sf_geos <- left_join(sf_geos, get_rmses(distr_by_tract, "tract"), by=c("geoid"))
+    sf_geos$puma <- pumas
+    
+    sf_geos.puma <- rbind(sf_geos.puma, sf_geos)
+  }
+  
+  # convert to sf
+  sf_geos.puma.sf <- st_sf(sf_geos.puma) %>%
+    filter(!st_is_empty(geometry))
+  
+  # combine WY PUMAs together and factor PUMA column to ensure plot ordering
+  sf_geos.puma.sf$puma <- factor(recode(sf_geos.puma.sf$puma,
+                                        "5600100"="State of WY",
+                                        "5600200"="State of WY",
+                                        "5600300"="State of WY",
+                                        "5600400"="State of WY",
+                                        "5600500"="State of WY"), 
+                                 levels=c(map_pumas[1:15], "State of WY"))
+  
+  dev.new(width=8, height=8, noRStudioGD = T)
+  
+  spatial_name <- "Tract"
+  
+  tm_shape(sf_geos.puma.sf) + 
+    tm_polygons(col="rmse",
+                style="cont",
+                palette="BuPu",
+                title=paste0("RMSE % (Census ",spatial_name,")"),
+                colorNA="#e6e6e6",
+                legend.is.portrait=F) +
+    tm_compass(position=c("right", "top")) +
+    tm_scale_bar(text.size=0.8) +
+    tm_facets(by="puma",
+              ncol=3) +
+    tm_ylab("                        Jacksonville, FL      Boston, MA        Phoenix, AZ       Houston, TX      Los Angeles, CA", 
+            size=1.2, 
+            space=1) +
+    tm_layout(main.title=main_title,
+              main.title.fontface="bold",
+              main.title.size=1.25,
+              main.title.position="center",
+              panel.labels=puma_labels,
+              panel.label.size=1.3,
+              legend.outside=T,
+              legend.outside.position="bottom",
+              legend.outside.size=0.2,
+              legend.title.size=1.175,
+              legend.title.fontface="bold",
+              legend.text.size=1,
+              outer.margins=c(0, 0.02, 0, 0.02),
+              inner.margins=c(0.06, 0.06, 0.06, 0.06)) 
+}
+
+plot_pie <- function(main_title, variable, spatial_level, puma) {
+  marg_dir <<- paste0("synthpop_data/acs_marginals/", puma, "/")
+  process_marginals(marg_dir)
+  marg_name <- if(variable!="ncars") paste0(spatial_level,"_",variable,".l") else "tract_nwork_ncars.l"
+  sym_variable <- if(variable %in% c("tenur_hhinc", "tenur_hhsiz", "emply", "i_inc")) paste0(variable,"_prox") else variable
+  
+  pie_data <- eval(parse(text=marg_name)) %>% 
+    mutate(var = factor(!!sym(sym_variable), levels=unique(!!sym(sym_variable)))) %>%
+    group_by(var) %>% 
+    summarise(marg_ct = sum(marg_ct))
+  pie_data.vec <- setNames(pie_data$marg_ct, pie_data$var)
+  
+  # save the figure
+  png(file=paste0(variable,"_",puma,".png"), width=250, height=250)
+  pie(pie_data.vec,
+      col=viridis(length(pie_data.vec)),
+      main=main_title)
+  dev.off()
+}
+
 ############################### PLOT SPECS #####################################
 
 use_prev_marg <- T
@@ -372,7 +479,7 @@ map_pumas <- c("0603701", "0603716", "0603733",
                "0400134", "0400105", "0400122",
                "2501400", "2503603", "2503302",
                "1208900", "1203105", "1203103",
-               "5600100", "5600200", "5600300", "5600400", "5600500")
+               "5600200", "5600100", "5600300", "5600400", "5600500")
 
 densities <- c(383.7, 9049.6, 42788.1,
                66.1, 3457.2, 11736.8,
@@ -385,6 +492,26 @@ densities <- c(383.7, 9049.6, 42788.1,
 ############################## STUDY AREA MAPS #################################
 
 plot_study_areas(map_pumas)
+
+###################### TRACT LEVEL HHTYPE DIFFERENCES ##########################
+
+plot_tract_hhtype_diffs_map("Tract-level deviation of household type composition from PUMA mean", 
+                            map_pumas, densities)
+
+################################# PIE CHARTS ###################################
+
+var_names <- c("tenur_hhinc", "tenur_hhsiz", "nwork", "hhtype", "i_sex_i_age", "emply", "ncars", "i_inc")
+spatial_levels <- c("tract", "blkgp", "tract", "tract", "tract", "blkgp", "tract", "tract")
+pie_titles <- c("Tenure by Household Income", "Tenure by Household Size", "Number of Workers", "Household Type", 
+                "Sex by Age", "Employment Status", "Number of Cars", "Income")
+for(v in seq_along(var_names)) {
+  for(puma in map_pumas) {
+    plot_pie(pie_titles[v], 
+             variable=var_names[v],
+             spatial_level=spatial_levels[v],
+             puma=puma)
+  }
+}
 
 ################################## ERROR MAPS ##################################
 
@@ -493,7 +620,7 @@ plot_error_map("Spatial errors in employment distribution",
 plot_error_map("Spatial errors in number of cars distribution",
                map_pumas, densities,
                variable="ncars", 
-               spatial_level="tracst", 
+               spatial_level="tract", 
                synpop_suffix=synpop_suffix, 
                gray_hh_pop_under=30, 
                gray_indv_pop_under=50, 
@@ -507,8 +634,6 @@ plot_error_map("Spatial errors in income distribution",
                gray_hh_pop_under=30, 
                gray_indv_pop_under=50, 
                NA_label="too few individuals")
-
-# include wyoming
 
 
 
